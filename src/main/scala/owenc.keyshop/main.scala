@@ -1,49 +1,54 @@
 package owenc.keyshop.main
 
-import akka.actor.typed.ActorSystem
-import akka.actor.typed.Behavior
-import akka.actor.typed.scaladsl.AbstractBehavior
-import akka.actor.typed.scaladsl.ActorContext
-import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.{ActorSystem, Behavior, PostStop, Signal}
+import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
 object Main {
     def main(args: Array[String]): Unit = {
-        //println("Hello, world!")
-        //args.foreach {println}
-        val testSystem = ActorSystem(System(), "testSystem")
+        val testSystem = ActorSystem(StartStopActor1(), "testSystem")
         testSystem ! "start"
     }
 }
 
-object PrintMyActorRefActor {
+object StartStopActor1 {
   def apply(): Behavior[String] =
-    Behaviors.setup(context => new PrintMyActorRefActor(context))
+    Behaviors.setup(context => new StartStopActor1(context))
 }
 
-class PrintMyActorRefActor(context: ActorContext[String]) extends AbstractBehavior[String](context) {
+class StartStopActor1(context: ActorContext[String]) extends AbstractBehavior[String](context) {
+  println("first started")
+  context.spawn(StartStopActor2(), "second")
 
   override def onMessage(msg: String): Behavior[String] =
     msg match {
-      case "printit" =>
-        val secondRef = context.spawn(Behaviors.empty[String], "second-actor")
-        println(s"Second: $secondRef")
-        this
+      case "stop" => Behaviors.stopped
     }
+
+  override def onSignal: PartialFunction[Signal, Behavior[String]] = {
+    case PostStop =>
+      println("first stopped")
+      this
+  }
+
 }
 
-object System {
+object StartStopActor2 {
   def apply(): Behavior[String] =
-    Behaviors.setup(context => new System(context))
-
+    Behaviors.setup(new StartStopActor2(_))
 }
 
-class System(context: ActorContext[String]) extends AbstractBehavior[String](context) {
-  override def onMessage(msg: String): Behavior[String] =
-    msg match {
-      case "start" =>
-        val firstRef = context.spawn(PrintMyActorRefActor(), "first-actor")
-        println(s"First: $firstRef")
-        firstRef ! "printit"
-        this
-    }
+class StartStopActor2(context: ActorContext[String]) extends AbstractBehavior[String](context) {
+  println("second started")
+
+  override def onMessage(msg: String): Behavior[String] = {
+    // no messages handled by this actor
+    Behaviors.unhandled
+  }
+
+  override def onSignal: PartialFunction[Signal, Behavior[String]] = {
+    case PostStop =>
+      println("second stopped")
+      this
+  }
+
 }
