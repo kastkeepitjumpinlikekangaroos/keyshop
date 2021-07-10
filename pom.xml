@@ -23,6 +23,14 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>1.7.31</version>
+      <scope>compile</scope>
+    </dependency>
+
+
+    <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
@@ -46,14 +54,14 @@
       <artifactId>akka-actor-typed_${scala.binary.version}</artifactId>
     </dependency>
 
-    <dependency>
+      <dependency>
       <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-cluster-sharding-typed_${scala.binary.version}</artifactId>
+      <artifactId>akka-persistence_${scala.binary.version}</artifactId>
     </dependency>
-
     <dependency>
       <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-cluster-typed_${scala.binary.version}</artifactId>
+      <artifactId>akka-persistence-testkit_${scala.binary.version}</artifactId>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>
