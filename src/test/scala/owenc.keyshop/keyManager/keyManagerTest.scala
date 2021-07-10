@@ -14,5 +14,25 @@ class KeyManagerSpec extends ScalaTestWithActorTestKit with AnyWordSpecLike {
       val response = probe.receiveMessage()
       response.value should ===(None)
     }
+
+    "reply with the set value after being set" in {
+      val writeProbe = createTestProbe[keyManager.KeyManager.ResponseWriteKey]()
+      val managerActor = spawn(keyManager.KeyManager("key"))
+
+      managerActor ! keyManager.KeyManager.WriteKey("value", writeProbe.ref)
+      val writeResponse = writeProbe.receiveMessage()
+      writeResponse.success should ===(true)
+
+      val readProbe = createTestProbe[keyManager.KeyManager.RespondKey]()
+      managerActor ! keyManager.KeyManager.ReadKey(readProbe.ref)
+      val readResponse = readProbe.receiveMessage()
+      readResponse.value should ===(Some("value"))
+    }
+
+    "not fail when writing async" in {
+      val managerActor = spawn(keyManager.KeyManager("key"))
+
+      managerActor ! keyManager.KeyManager.WriteKeyAsync("value")
+    }
   }
 }
