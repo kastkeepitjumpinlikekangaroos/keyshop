@@ -1,29 +1,11 @@
 package owenc.keyshop.main
-import akka.actor.typed.{Behavior, PostStop, Signal, ActorSystem}
-import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
+import akka.actor.typed.{ActorSystem, ActorRef}
+import owenc.keyshop.keyshopSupervisor.KeyshopSupervisor
+import owenc.keyshop.keyManager.KeyManager
 
 
 object Main {
     def main(args: Array[String]): Unit = {
-      ActorSystem[Nothing](KeyshopSupervisor(), "keyshop-supervisor")
+      val supervisor = ActorSystem[KeyshopSupervisor.Command](KeyshopSupervisor(), "keyshop-supervisor")
     }
-}
-
-object KeyshopSupervisor {
-  def apply(): Behavior[Nothing] =
-    Behaviors.setup[Nothing](context => new KeyshopSupervisor(context))
-}
-
-class KeyshopSupervisor(context: ActorContext[Nothing]) extends AbstractBehavior[Nothing](context) {
-  context.log.info("Keyshop server started")
-
-  override def onMessage(msg: Nothing): Behavior[Nothing] = {
-    Behaviors.unhandled
-  }
-
-  override def onSignal: PartialFunction[Signal,Behavior[Nothing]] = {
-    case PostStop =>
-      context.log.info("Keyshop server stopped")
-      this
-  }
 }

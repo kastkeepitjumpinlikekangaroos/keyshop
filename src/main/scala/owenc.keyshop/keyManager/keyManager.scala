@@ -1,8 +1,7 @@
 package owenc.keyshop.keyManager
 
-import akka.actor.typed.{ActorRef}
+import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, LoggerOps}
-import akka.actor.typed.Behavior
 
 object KeyManager {
   def apply(key: String): Behavior[Command] =
