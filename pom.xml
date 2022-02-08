@@ -18,6 +18,13 @@
       <type>pom</type>
       <scope>import</scope>
     </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-http-bom_${scala.binary.version}</artifactId>
+      <version>10.2.7</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
   </dependencies>
 </dependencyManagement>
 
@@ -55,6 +62,11 @@
     </dependency>
 
       <dependency>
+        <groupId>com.typesafe.akka</groupId>
+        <artifactId>akka-stream_${scala.binary.version}</artifactId>
+      </dependency>
+
+    <dependency>
       <groupId>com.typesafe.akka</groupId>
       <artifactId>akka-persistence_${scala.binary.version}</artifactId>
     </dependency>
@@ -62,6 +74,11 @@
       <groupId>com.typesafe.akka</groupId>
       <artifactId>akka-persistence-testkit_${scala.binary.version}</artifactId>
       <scope>test</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>com.typesafe.akka</groupId>
+        <artifactId>akka-http-spray-json_${scala.binary.version}</artifactId>
     </dependency>
 
   </dependencies>

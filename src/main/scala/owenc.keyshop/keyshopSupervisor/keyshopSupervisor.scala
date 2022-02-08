@@ -7,12 +7,20 @@ object KeyshopSupervisor {
   def apply(): Behavior[Command] =
     Behaviors.setup[Command](context => new KeyshopSupervisor(context))
   sealed trait Command
-  final case class ReadKey(key: String, replyTo: ActorRef[KeyManager.RespondKey]) extends Command
+  final case class ReadKey(key: String, replyTo: ActorRef[RespondKey])
+      extends Command
   final case class WriteKeyAsync(key: String, value: String) extends Command
-  final case class WriteKey(key: String, value: String, replyTo: ActorRef[KeyManager.ResponseWriteKey]) extends Command
+  final case class WriteKey(
+      key: String,
+      value: String,
+      replyTo: ActorRef[ResponseWriteKey]
+  ) extends Command
+  final case class RespondKey(value: Option[String]) extends Command
+  final case class ResponseWriteKey(success: Boolean) extends Command
 }
 
-class KeyshopSupervisor(context: ActorContext[KeyshopSupervisor.Command]) extends AbstractBehavior[KeyshopSupervisor.Command](context) {
+class KeyshopSupervisor(context: ActorContext[KeyshopSupervisor.Command])
+    extends AbstractBehavior[KeyshopSupervisor.Command](context) {
   import KeyshopSupervisor._
   context.log.info("Keyshop server started")
   private var keyManagers = Map.empty[String, ActorRef[KeyManager.Command]]
@@ -60,12 +68,12 @@ class KeyshopSupervisor(context: ActorContext[KeyshopSupervisor.Command]) extend
             this
           }
         }
-
       }
+      case _ => this
     }
   }
 
-  override def onSignal: PartialFunction[Signal,Behavior[Command]] = {
+  override def onSignal: PartialFunction[Signal, Behavior[Command]] = {
     case PostStop =>
       context.log.info("Keyshop server stopped")
       this
