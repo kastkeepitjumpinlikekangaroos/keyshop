@@ -16,14 +16,14 @@ class KeyshopSupervisorSpec
       supervisorActor ! KeyshopSupervisor.ReadKey("key", readProbe.ref)
       readProbe.expectMessage(KeyshopSupervisor.RespondKey(value = None))
 
-      val successProbe = createTestProbe[KeyshopSupervisor.ResponseWriteKey]()
+      val successProbe = createTestProbe[KeyshopSupervisor.RespondKey]()
       supervisorActor ! KeyshopSupervisor.WriteKey(
         "key2",
         "value2",
         successProbe.ref
       )
       successProbe.expectMessage(
-        KeyshopSupervisor.ResponseWriteKey(success = true)
+        KeyshopSupervisor.RespondKey(value=Some("value2"))
       )
 
       supervisorActor ! KeyshopSupervisor.WriteKey(
@@ -32,7 +32,7 @@ class KeyshopSupervisorSpec
         successProbe.ref
       )
       successProbe.expectMessage(
-        KeyshopSupervisor.ResponseWriteKey(success = true)
+        KeyshopSupervisor.RespondKey(value=Some("value3"))
       )
 
       supervisorActor ! KeyshopSupervisor.WriteKey(
@@ -41,7 +41,7 @@ class KeyshopSupervisorSpec
         successProbe.ref
       )
       successProbe.expectMessage(
-        KeyshopSupervisor.ResponseWriteKey(success = true)
+        KeyshopSupervisor.RespondKey(value=Some("value4"))
       )
 
       supervisorActor ! KeyshopSupervisor.ReadKey("key2", readProbe.ref)

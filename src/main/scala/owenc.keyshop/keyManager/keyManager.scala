@@ -18,7 +18,7 @@ object KeyManager {
   final case class WriteKeyAsync(value: String) extends Command
   final case class WriteKey(
       value: String,
-      replyTo: ActorRef[KeyshopSupervisor.ResponseWriteKey]
+      replyTo: ActorRef[KeyshopSupervisor.RespondKey]
   ) extends Command
 }
 
@@ -38,7 +38,7 @@ class KeyManager(context: ActorContext[KeyManager.Command], key: String)
         this
       case WriteKey(value, replyTo) =>
         keyVal = Some(value)
-        replyTo ! KeyshopSupervisor.ResponseWriteKey(true)
+        replyTo ! KeyshopSupervisor.RespondKey(keyVal)
         this
     }
   }

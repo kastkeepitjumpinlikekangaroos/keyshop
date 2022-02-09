@@ -13,10 +13,9 @@ object KeyshopSupervisor {
   final case class WriteKey(
       key: String,
       value: String,
-      replyTo: ActorRef[ResponseWriteKey]
+      replyTo: ActorRef[RespondKey]
   ) extends Command
   final case class RespondKey(value: Option[String]) extends Command
-  final case class ResponseWriteKey(success: Boolean) extends Command
 }
 
 class KeyshopSupervisor(context: ActorContext[KeyshopSupervisor.Command])

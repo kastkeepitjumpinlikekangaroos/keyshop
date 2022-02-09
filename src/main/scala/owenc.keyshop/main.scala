@@ -44,6 +44,15 @@ object Main {
               keyshop ! KeyshopSupervisor.WriteKeyAsync(key, value)
               complete(StatusCodes.Accepted, "Key updated")
             }
+          },
+          put {
+            path(Segment / Segment / "sync") { (key, value) =>
+              implicit val timeout: Timeout = 5.seconds
+              val res: Future[KeyshopSupervisor.RespondKey] =
+                (keyshop ? (a => KeyshopSupervisor.WriteKey(key, value, a)))
+                  .mapTo[KeyshopSupervisor.RespondKey]
+              complete(res)
+            }
           }
         )
       }

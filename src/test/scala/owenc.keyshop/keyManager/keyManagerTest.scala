@@ -16,12 +16,12 @@ class KeyManagerSpec extends ScalaTestWithActorTestKit with AnyWordSpecLike {
     }
 
     "reply with the set value after being set" in {
-      val writeProbe = createTestProbe[KeyshopSupervisor.ResponseWriteKey]()
+      val writeProbe = createTestProbe[KeyshopSupervisor.RespondKey]()
       val managerActor = spawn(KeyManager("key"))
 
       managerActor ! KeyManager.WriteKey("value", writeProbe.ref)
       writeProbe.expectMessage(
-        KeyshopSupervisor.ResponseWriteKey(success = true)
+        KeyshopSupervisor.RespondKey(value = Some("value"))
       )
 
       val readProbe = createTestProbe[KeyshopSupervisor.RespondKey]()
