@@ -14,7 +14,9 @@ class KeyshopSupervisorSpec
       val supervisorActor = spawn(KeyshopSupervisor())
 
       supervisorActor ! KeyshopSupervisor.ReadKey("key", readProbe.ref)
-      readProbe.expectMessage(KeyshopSupervisor.RespondKey(value = None))
+      readProbe.expectMessage(
+        KeyshopSupervisor.RespondKey(key = "key", value = None)
+      )
 
       val successProbe = createTestProbe[KeyshopSupervisor.RespondKey]()
       supervisorActor ! KeyshopSupervisor.WriteKey(
@@ -23,7 +25,7 @@ class KeyshopSupervisorSpec
         successProbe.ref
       )
       successProbe.expectMessage(
-        KeyshopSupervisor.RespondKey(value=Some("value2"))
+        KeyshopSupervisor.RespondKey(key = "key2", value = Some("value2"))
       )
 
       supervisorActor ! KeyshopSupervisor.WriteKey(
@@ -32,7 +34,7 @@ class KeyshopSupervisorSpec
         successProbe.ref
       )
       successProbe.expectMessage(
-        KeyshopSupervisor.RespondKey(value=Some("value3"))
+        KeyshopSupervisor.RespondKey(key = "key3", value = Some("value3"))
       )
 
       supervisorActor ! KeyshopSupervisor.WriteKey(
@@ -41,26 +43,28 @@ class KeyshopSupervisorSpec
         successProbe.ref
       )
       successProbe.expectMessage(
-        KeyshopSupervisor.RespondKey(value=Some("value4"))
+        KeyshopSupervisor.RespondKey(key = "key4", value = Some("value4"))
       )
 
       supervisorActor ! KeyshopSupervisor.ReadKey("key2", readProbe.ref)
       readProbe.expectMessage(
-        KeyshopSupervisor.RespondKey(value = Some("value2"))
+        KeyshopSupervisor.RespondKey(key = "key2", value = Some("value2"))
       )
 
       supervisorActor ! KeyshopSupervisor.ReadKey("key4", readProbe.ref)
       readProbe.expectMessage(
-        KeyshopSupervisor.RespondKey(value = Some("value4"))
+        KeyshopSupervisor.RespondKey(key = "key4", value = Some("value4"))
       )
 
       supervisorActor ! KeyshopSupervisor.ReadKey("key3", readProbe.ref)
       readProbe.expectMessage(
-        KeyshopSupervisor.RespondKey(value = Some("value3"))
+        KeyshopSupervisor.RespondKey(key = "key3", value = Some("value3"))
       )
 
       supervisorActor ! KeyshopSupervisor.ReadKey("key", readProbe.ref)
-      readProbe.expectMessage(KeyshopSupervisor.RespondKey(value = None))
+      readProbe.expectMessage(
+        KeyshopSupervisor.RespondKey(key = "key", value = None)
+      )
     }
   }
 }

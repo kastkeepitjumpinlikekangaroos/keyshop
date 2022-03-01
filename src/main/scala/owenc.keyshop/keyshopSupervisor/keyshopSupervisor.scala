@@ -1,5 +1,5 @@
 package owenc.keyshop.keyshopSupervisor
-import akka.actor.typed.{Behavior, PostStop, Signal, ActorSystem, ActorRef}
+import akka.actor.typed.{Behavior, PostStop, Signal, ActorRef}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import owenc.keyshop.keyManager.KeyManager
 
@@ -7,6 +7,7 @@ object KeyshopSupervisor {
   def apply(): Behavior[Command] =
     Behaviors.setup[Command](context => new KeyshopSupervisor(context))
   sealed trait Command
+  final case class GetKeys(replyTo: ActorRef[RespondKey]) extends Command
   final case class ReadKey(key: String, replyTo: ActorRef[RespondKey])
       extends Command
   final case class WriteKeyAsync(key: String, value: String) extends Command
@@ -15,7 +16,8 @@ object KeyshopSupervisor {
       value: String,
       replyTo: ActorRef[RespondKey]
   ) extends Command
-  final case class RespondKey(value: Option[String]) extends Command
+  final case class RespondKey(key: String, value: Option[String])
+      extends Command
 }
 
 class KeyshopSupervisor(context: ActorContext[KeyshopSupervisor.Command])
@@ -26,6 +28,12 @@ class KeyshopSupervisor(context: ActorContext[KeyshopSupervisor.Command])
 
   override def onMessage(msg: Command): Behavior[Command] = {
     msg match {
+      case GetKeys(replyTo) => {
+        keyManagers.toList.foreach { keyVal =>
+          keyVal._2 ! KeyManager.ReadKey(replyTo)
+        }
+        this
+      }
       case ReadKey(key, replyTo) => {
         keyManagers.get(key) match {
           case Some(actor) => {

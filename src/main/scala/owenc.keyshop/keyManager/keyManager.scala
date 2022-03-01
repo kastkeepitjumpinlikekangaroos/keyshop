@@ -1,12 +1,7 @@
 package owenc.keyshop.keyManager
 
 import akka.actor.typed.{ActorRef, Behavior}
-import akka.actor.typed.scaladsl.{
-  AbstractBehavior,
-  ActorContext,
-  Behaviors,
-  LoggerOps
-}
+import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import owenc.keyshop.keyshopSupervisor.KeyshopSupervisor
 
 object KeyManager {
@@ -31,14 +26,14 @@ class KeyManager(context: ActorContext[KeyManager.Command], key: String)
   override def onMessage(msg: Command): Behavior[Command] = {
     msg match {
       case ReadKey(replyTo) =>
-        replyTo ! KeyshopSupervisor.RespondKey(keyVal)
+        replyTo ! KeyshopSupervisor.RespondKey(key, keyVal)
         this
       case WriteKeyAsync(value) =>
         keyVal = Some(value)
         this
       case WriteKey(value, replyTo) =>
         keyVal = Some(value)
-        replyTo ! KeyshopSupervisor.RespondKey(keyVal)
+        replyTo ! KeyshopSupervisor.RespondKey(key, keyVal)
         this
     }
   }

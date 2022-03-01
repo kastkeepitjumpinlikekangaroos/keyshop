@@ -10,22 +10,40 @@ import akka.http.scaladsl.server.Directives._
 import akka.util.Timeout
 import spray.json.DefaultJsonProtocol._
 
+import java.nio.file.{Paths, Files}
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.StdIn
 import owenc.keyshop.keyshopSupervisor.KeyshopSupervisor
 import owenc.keyshop.keyManager.KeyManager
+import owenc.keyshop.persistor.Persistor
 
 object Main {
-  implicit val resFormat = jsonFormat1(KeyshopSupervisor.RespondKey)
+  implicit val resFormat = jsonFormat2(KeyshopSupervisor.RespondKey)
+  def loadExistingData = {
+    (dbLoc: String, keyShop: ActorRef[KeyshopSupervisor.Command]) =>
+      val filePath = Paths.get(s"${dbLoc}/${Persistor.keyList}")
+      if (Files.exists(filePath)) {
+        val existingKeys = Persistor.readExistingKeys(dbLoc, Persistor.keyList)
+        existingKeys.foreach { case (key, value) =>
+          keyShop ! KeyshopSupervisor.WriteKeyAsync(key, value)
+        }
+      }
+  }
 
   def main(args: Array[String]): Unit = {
+    val dbLoc = if (args.length > 1) args(0) else "./db"
+
+    val persistor: ActorSystem[Persistor.Command] =
+      ActorSystem(Persistor(dbLoc), "persistor")
+
     implicit val system: ActorSystem[KeyshopSupervisor.Command] =
       ActorSystem(KeyshopSupervisor(), "keyshop")
     // needed for the future flatMap/onComplete in the end
     implicit val executionContext: ExecutionContext = system.executionContext
 
     val keyshop: ActorRef[KeyshopSupervisor.Command] = system
+    loadExistingData(dbLoc, keyshop)
 
     val route =
       pathPrefix("keyshop") {
@@ -42,12 +60,14 @@ object Main {
           put {
             path(Segment / Segment) { (key, value) =>
               keyshop ! KeyshopSupervisor.WriteKeyAsync(key, value)
-              complete(StatusCodes.Accepted, "Key updated")
+              persistor ! Persistor.Persist(key, value)
+              complete(KeyshopSupervisor.RespondKey(key, Some(value)))
             }
           },
           put {
             path(Segment / Segment / "sync") { (key, value) =>
               implicit val timeout: Timeout = 5.seconds
+              persistor ! Persistor.Persist(key, value)
               val res: Future[KeyshopSupervisor.RespondKey] =
                 (keyshop ? (a => KeyshopSupervisor.WriteKey(key, value, a)))
                   .mapTo[KeyshopSupervisor.RespondKey]
@@ -62,7 +82,9 @@ object Main {
     StdIn.readLine() // let it run until user presses return
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port
-      .onComplete(_ => system.terminate()) // and shutdown when done
-
+      .onComplete(_ => {
+        system.terminate()
+        persistor.terminate()
+      }) // and shutdown when done
   }
 }
