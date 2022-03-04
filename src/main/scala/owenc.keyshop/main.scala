@@ -20,16 +20,6 @@ import owenc.keyshop.persistor.Persistor
 
 object Main {
   implicit val resFormat = jsonFormat2(KeyshopSupervisor.RespondKey)
-  def loadExistingData = {
-    (dbLoc: String, keyShop: ActorRef[KeyshopSupervisor.Command]) =>
-      val filePath = Paths.get(s"${dbLoc}/${Persistor.keyList}")
-      if (Files.exists(filePath)) {
-        val existingKeys = Persistor.readExistingKeys(dbLoc, Persistor.keyList)
-        existingKeys.foreach { case (key, value) =>
-          keyShop ! KeyshopSupervisor.WriteKeyAsync(key, value)
-        }
-      }
-  }
 
   def main(args: Array[String]): Unit = {
     val dbLoc = if (args.length > 1) args(0) else "./db"
@@ -43,7 +33,11 @@ object Main {
     implicit val executionContext: ExecutionContext = system.executionContext
 
     val keyshop: ActorRef[KeyshopSupervisor.Command] = system
-    loadExistingData(dbLoc, keyshop)
+
+    val existingKeys = Persistor.readExistingKeys(dbLoc, Persistor.keyList)
+    existingKeys.foreach { case (key, value) =>
+      keyshop ! KeyshopSupervisor.WriteKeyAsync(key, value)
+    }
 
     val route =
       pathPrefix("keyshop") {
@@ -80,6 +74,7 @@ object Main {
     val bindingFuture = Http().newServerAt("localhost", 8080).bind(route)
     println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
     StdIn.readLine() // let it run until user presses return
+    Persistor.cleanupKeylistFile(dbLoc, Persistor.keyList)
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port
       .onComplete(_ => {
